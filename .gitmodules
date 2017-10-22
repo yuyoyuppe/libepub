@@ -1,0 +1,6 @@
+[submodule "miniz"]
+	path = miniz
+	url = git://github.com/uroni/miniz.git
+[submodule "pugixml"]
+	path = pugixml
+	url = https://github.com/zeux/pugixml

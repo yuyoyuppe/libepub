@@ -1,0 +1,1 @@
+"C:\Program Files\Java\jdk1.8.0_112\jre\bin\java.exe" -jar epubcheck.jar combo_output.epub

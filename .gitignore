@@ -1,0 +1,94 @@
+# We don't need to track generated makefiles by premake.
+Makefile
+
+# IPDF tool
+epubcheck.jar
+
+#bin
+*.exe
+*.dll
+*.lib
+*.a
+*.o
+
+#OS junk files
+[Tt]humbs.db
+*.DS_Store
+
+#Visual Studio files
+.vs
+*.vcxproj
+*.sln
+*.epub
+*.sdf
+*.suo
+*.opensdf
+*.user
+*.depend
+*.layout
+*.vc.db
+*.vc.opendb
+*.tlog
+*.[Oo]bj
+*.user
+*.aps
+*.pch
+*.pdb
+*.vspscc
+*.vssscc
+*_i.c
+*_p.c
+*.ncb
+*.suo
+*.tlb
+*.tlh
+*.bak
+*.[Cc]ache
+*.ilk
+*.log
+*.lib
+*.sbr
+*.sdf
+*.opensdf
+*.unsuccessfulbuild
+ipch/
+[Oo]bj/
+[Bb]in
+[Dd]ebug*/
+[Rr]elease*/
+x64
+Ankh.NoLoad
+
+#MonoDevelop
+*.pidb
+*.userprefs
+
+#Tooling
+_ReSharper*/
+*.resharper
+[Tt]est[Rr]esult*
+*.sass-cache
+
+#Project files
+[Bb]uild/
+
+
+# Office Temp Files
+~$*
+
+# vim Temp Files
+*~
+
+#NuGet
+packages/
+*.nupkg
+
+#ncrunch
+*ncrunch*
+*crunch*.local.xml
+
+# visual studio database projects
+*.dbmdl
+
+#Test files
+*.testsettings
