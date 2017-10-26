@@ -1,6 +1,8 @@
 -- windows genrration:
 --     premake5 vs2017 --os=windows
 
+local commonBuildOptions = {}
+
 workspace "libepub"
     configurations { "debug", "release" }
     language "C++"
@@ -21,9 +23,9 @@ workspace "libepub"
     filter "platforms:windows"
         system "windows"
         defines {"_CRT_SECURE_NO_WARNINGS"}
-        buildoptions {"/std:c++17"}
-        
-        filter "platforms:linux"
+        commonBuildOptions = table.join(commonBuildOptions, {"/std:c++17"})
+    
+    filter "platforms:linux"
         system "linux"
         objdir ("/tmp/")
 
@@ -39,6 +41,7 @@ workspace "libepub"
     project (project_name)
         location (project_name) 
         kind "StaticLib"
+        buildoptions { commonBuildOptions }
         targetprefix "lib"
         files { (project_name .. "/src/pugixml.hpp"), (project_name .. "/src/pugiconfig.hpp"), (project_name .. "/src/pugixml.cpp") }
         
@@ -47,6 +50,7 @@ workspace "libepub"
         location (project_name) 
         kind "StaticLib"
         targetprefix ""
+        buildoptions { commonBuildOptions }
         dependson {"miniz, tinyxml2"}
         files {(project_name .. "/**.cpp"), (project_name .. "/**.h")}        
         links {"miniz", "pugixml"}
@@ -56,6 +60,7 @@ workspace "libepub"
         location (project_name) 
         kind "ConsoleApp"
         dependson {"libepub"}
+        buildoptions { commonBuildOptions }
         includedirs {"./libepub/"}
         files {(project_name .. "/**.cpp"), (project_name .. "/**.h")}
         

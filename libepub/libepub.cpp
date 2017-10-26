@@ -23,7 +23,7 @@ Book::Book(std::string const & path_to_epub)
   if(!file.is_open())
     fatal("can't open %s", path_to_epub.c_str());
 
-  std::string buffer{std::istreambuf_iterator<char>{file}, std::istreambuf_iterator<char>{}};
+  std::string const buffer{std::istreambuf_iterator<char>{file}, std::istreambuf_iterator<char>{}};
   initializeFromBuffer(buffer.c_str(), buffer.size());
 }
 
@@ -38,7 +38,7 @@ Book::Book(Book const & rhs)
 {
   sort(begin(_resources), end(_resources), Resource::Sort{});
   auto it = unique(begin(_resources), end(_resources), Resource::Compare{});
-  _resources.erase(it, end(_resources));
+  _resources.erase(it, cend(_resources));
 }
 Book Book::operator+(Book const & rhs)
 {
@@ -49,7 +49,7 @@ Book Book::operator+(Book const & rhs)
   return result;
 }
 
-void removeNodes(pugi::xpath_node_set &                      nodeSet,
+void removeNodes(pugi::xpath_node_set const &                nodeSet,
                  std::function<bool(pugi::xml_node const &)> needRemoval = [](auto) { return true; })
 {
   for(auto const & xnode : nodeSet)
@@ -62,7 +62,7 @@ void removeNodes(pugi::xpath_node_set &                      nodeSet,
 
 void Book::updateRootFile() const
 {
-  auto & xml = getXMLRepresentation(resource(_rootFilename));
+  auto const & xml = getXMLRepresentation(resource(_rootFilename));
 
   auto isInSpine = [this](char const * attributeName, pugi::xml_node const & node) {
     //TODO: sort spineids and use binary_find
@@ -84,7 +84,7 @@ void Book::updateRootFile() const
     pugi::xml_node newSpineNode    = spineNode.append_child("itemref");
 
     int constexpr idOffset = 10000;
-    auto idxStr{std::to_string(idx + idOffset)};
+    auto const idxStr{std::to_string(idx + idOffset)};
 
     newManifestNode.append_attribute("href").set_value(r._path.c_str());
     newManifestNode.append_attribute("id").set_value(idxStr.c_str());
@@ -125,13 +125,13 @@ void Book::save(std::string const & filename) const
 
 void Book::printMetadata(std::ostream & output)
 {
-  for(auto && [name, value] : _metadata)
+  for(auto const && [name, value] : _metadata)
     output << name << ": " << value << '\n';
 }
 
 Resource const & Book::resource(std::string const & path) const
 {
-  auto it = binary_find(begin(_resources), end(_resources), Resource{path, nullptr, 0}, Resource::Sort{});
+  auto const it = binary_find(cbegin(_resources), cend(_resources), Resource{path, nullptr, 0}, Resource::Sort{});
   if(it == cend(_resources))
   {
     fatal("requested non-existent resource %s", path.c_str());
@@ -144,10 +144,10 @@ pugi::xml_document & Book::getXMLRepresentation(Resource const & r) const
   if(r._kind.find("xml") == std::string::npos)
     fatal("trying to get XML representation from incompatible resource kind!");
 
-  auto it = _parsedXMLResources.find(r.ID());
+  auto const it = _parsedXMLResources.find(r.ID());
   if(it == _parsedXMLResources.cend())
   {
-    pugi::xml_parse_result parseRes =
+    pugi::xml_parse_result const parseRes =
       _parsedXMLResources[r.ID()].load_buffer((void *)(r._content.c_str()), r._content.size());
     if(parseRes.status != pugi::status_ok)
     {
@@ -174,7 +174,7 @@ void Book::loadMetadata(Resource const & rootfile)
 
   auto const & xml = getXMLRepresentation(rootfile);
 
-  for(auto && [name, path] : metadataSpec)
+  for(auto const && [name, path] : metadataSpec)
     _metadata[name] = xml.select_node(path).node().text().as_string();
 }
 
@@ -186,7 +186,8 @@ struct text_walker : pugi::xml_tree_walker
   bool for_each(pugi::xml_node & node) override
   {
     _text.append(node.text().as_string());
-    return _text.empty();
+    bool const continueTraversing = _text.empty();
+    return continueTraversing;
   }
 };
 
@@ -198,7 +199,7 @@ std::string Book::deduceChapterName(Resource const & chapter) const
     char const   headerTag[] = {'/', '/', 'h', idx, '\0'};
     auto const & headers     = xml.select_nodes(headerTag);
 
-    for(auto & header : headers)
+    for(auto const & header : headers)
       if(header)
       {
         text_walker walker;
@@ -220,7 +221,7 @@ void Book::loadChapters(Resource const & rootfile)
 
   auto const sortByID = tupleElementSorter<0>();
   {
-    auto manifestNodes = xml.select_nodes("/package/manifest/item");
+    auto const manifestNodes = xml.select_nodes("/package/manifest/item");
     manifest.reserve(manifestNodes.size());
     for(auto const & n : manifestNodes)
       manifest.emplace_back(n.node().attribute("id").as_string(),
@@ -228,7 +229,7 @@ void Book::loadChapters(Resource const & rootfile)
                             n.node().attribute("media-type").as_string());
     sort(begin(manifest), end(manifest), sortByID);
 
-    auto spineNodes = xml.select_nodes("/package/spine/itemref");
+    auto const spineNodes = xml.select_nodes("/package/spine/itemref");
     _spineIDs.reserve(spineNodes.size());
     for(auto const & n : spineNodes)
       _spineIDs.emplace_back(n.node().attribute("idref").as_string());
@@ -237,10 +238,10 @@ void Book::loadChapters(Resource const & rootfile)
   {
     manifest_item_t chapterID{idref, "", ""};
 
-    auto it = binary_find(begin(manifest), end(manifest), chapterID, sortByID);
-    if(it == end(manifest))
+    auto const it = binary_find(cbegin(manifest), cend(manifest), chapterID, sortByID);
+    if(it == cend(manifest))
       fatal(std::string{"couldn't match spine itemref with manifest item "} + idref);
-    auto & res = resource(std::get<1>(*it));
+    auto const & res = resource(std::get<1>(*it));
 
     const_cast<Resource &>(res)._kind = std::get<2>(*it);
     _chapters.emplace_back(std::move(deduceChapterName(res)), res._path);
@@ -249,7 +250,7 @@ void Book::loadChapters(Resource const & rootfile)
 
 void Book::addResource(Resource && r)
 {
-  auto pos = lower_bound(begin(_resources), end(_resources), r, Resource::Sort{});
+  auto const pos = lower_bound(begin(_resources), end(_resources), r, Resource::Sort{});
   _resources.insert(pos, std::move(r));
 }
 
