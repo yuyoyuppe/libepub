@@ -64,7 +64,7 @@ void Book::updateRootFile() const
 {
   auto const & xml = getXMLRepresentation(resource(_rootFilename));
 
-  auto isInSpine = [this](char const * attributeName, pugi::xml_node const & node) {
+  auto const isInSpine = [this](char const * attributeName, pugi::xml_node const & node) {
     //TODO: sort spineids and use binary_find
     return end(_spineIDs) != find_if(begin(_spineIDs), end(_spineIDs), [&](char const * spineID) {
              return 0 == ::strcmp(node.attribute(attributeName).as_string(), spineID);
